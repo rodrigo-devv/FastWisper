@@ -1,0 +1,11 @@
+/target
+**/*.rs.bk
+*.bin
+*.gguf
+*.onnx
+*.wav
+!tests/fixtures/*.wav
+.env
+node_modules/
+ui/dist/
+ui/src-tauri/target/

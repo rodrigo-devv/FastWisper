@@ -1,0 +1,48 @@
+[workspace]
+resolver = "3"
+exclude = ["ui/src-tauri"]
+members = ["crates/fw-core", "crates/fastwisperd", "crates/fastwisper"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+# File::try_lock (single-instance do daemon) estabilizou no 1.89.
+rust-version = "1.89"
+license = "MIT"
+repository = "https://github.com/rodrigo-devv/FastWisper"
+
+[workspace.dependencies]
+fw-core = { path = "crates/fw-core" }
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+hound = "3.5"
+# Bloqueio de rede do daemon (ABI 4+, kernel 6.7+), sem unsafe no projeto.
+landlock = "0.4.7"
+pipewire = "0.10"
+reqwest = { version = "0.13", default-features = false, features = ["rustls", "json"] }
+rubato = "5"
+rusqlite = { version = "0.40", features = ["bundled"] }
+rustix = { version = "1", features = ["fs", "process"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.11"
+tempfile = "3"
+thiserror = "2"
+tokio = { version = "1", features = ["io-util", "macros", "net", "process", "rt-multi-thread", "signal", "sync", "time"] }
+toml = "0.9"
+toml_edit = "0.25"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+ureq = "3"
+whisper-rs = { version = "0.16", features = ["tracing_backend"] }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+dbg_macro = "warn"
+todo = "warn"
+unwrap_used = "warn"
+
+[profile.release]
+lto = "thin"

@@ -1,0 +1,29 @@
+[Unit]
+Description=FastWisper: ditado por voz local
+Documentation=https://github.com/rodrigo-devv/FastWisper
+# Precisa da sessão gráfica (Hyprland, Wayland, PipeWire) já no ambiente do
+# gerenciador do usuário; o uwsm do Omarchy exporta essas variáveis.
+PartOf=graphical-session.target
+After=graphical-session.target pipewire.service wireplumber.service
+Requisite=graphical-session.target
+
+[Service]
+ExecStart=%h/.local/bin/fastwisperd
+Restart=on-failure
+RestartSec=2
+UMask=0077
+NoNewPrivileges=true
+# Rede: o bloqueio de verdade é o Landlock dentro do próprio fastwisperd
+# (TCP só para a porta do endpoint LLM configurado; `fastwisper doctor`
+# mostra o estado). As duas linhas abaixo NÃO isolam a rede em serviço de
+# usuário: sem root o systemd só registra "unit configures an IP firewall,
+# but not running as root" e não aplica (recibo systemd-deny.json:
+# not_enforced). Ficam como defesa extra para quem rodar como serviço de
+# sistema. Medir com scripts/network/systemd-deny.sh; o Ollama é outro
+# processo e não é isolado por esta unidade (scripts/network/isolated-egress.sh).
+# Provider remoto opt-in: setup gera drop-in que zera o IPAddressDeny.
+IPAddressDeny=any
+IPAddressAllow=localhost
+
+[Install]
+WantedBy=graphical-session.target

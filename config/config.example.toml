@@ -1,0 +1,86 @@
+# FastWisper: copie para ~/.config/fastwisper/config.toml.
+# Campos desconhecidos são erro. Valores abaixo são os padrões, exceto os exemplos de dicionário/snippet.
+
+[ui]
+language = "en"             # idioma do FastWisper: "en" | "pt-BR"; ao vivo, sem mudar asr.languages ou frases
+
+[hotkey]
+max_recording_secs = 300
+min_recording_ms = 300
+# Atalhos: modificadores (SUPER, CTRL, ALT, SHIFT) + uma tecla; ao menos um além de Shift.
+# Esc continua fixo; os três atalhos precisam ser diferentes; conflitos externos exigem confirmação.
+# Mude com `fastwisper config set hotkey.dictate SUPER+D` (ou pelo hub): o Hyprland recarrega sozinho.
+dictate = "ALT+SPACE"            # segurar grava; soltar a tecla ou um modificador transcreve
+hands_free = "ALT+SHIFT+SPACE"   # liga e desliga sem segurar
+paste_last = "SUPER+ALT+V"       # cola o último ditado de novo
+
+[audio]
+device = ""                 # preenchido pelo `fastwisper setup` (nó exato do PipeWire); vazio = não grava
+strict_device = true        # sem fallback: se o microfone sumir, avisa e não grava de outro
+sounds = true               # sons curtos de início e fim da gravação
+sound_volume = 0.4          # 0 a 1
+
+[asr]
+model = "~/.local/share/fastwisper/models/ggml-large-v3-turbo-q5_0.bin"
+languages = ["pt", "en"]    # transcrição sem traduzir; independente de ui.language; seleciona as frases do “enviar agora”
+threads = 8
+gpu = "auto"                # "auto" (1ª GPU Vulkan; dedicadas primeiro), "cpu" ou parte do nome; sem fallback
+# backend: Vulkan (AMD, Intel ou NVIDIA, com o driver Vulkan da placa); sem GPU Vulkan, CPU
+
+[llm]
+enabled = true
+engine = "ollama"            # "ollama" | "openai_compatible" (OpenAI, OpenRouter, Groq, LM Studio, llama-server)
+endpoint = "http://127.0.0.1:11434"   # loopback = local; outro host = remoto (https + remote_consent)
+model = "qwen3:4b-instruct"  # padrão recomendado (Apache-2.0; digest fixado, conferido pelo doctor)
+# Outros modelos instalados no seu Ollama são permitidos (ex.: "qwen3:8b"); fora do pin o doctor só avisa.
+think = false
+timeout_ms = 1500            # teto; o deadline end-to-end restante pode ser menor
+skip_below_words = 4
+style = "casual"            # formal | casual | very_casual | excited
+format_in_terminals = true  # terminais e harnesses: LLM com regras de shell e nomes de programa do PATH; false = literal
+remote_consent = false      # provider fora desta máquina recebe só o texto (nunca áudio); exige consentimento
+api_key_env = ""            # ex.: "OPENAI_API_KEY" (o serviço systemd não vê o ambiente do shell)
+api_key_file = ""           # ex.: "~/.config/fastwisper/api-key" (arquivo 0600)
+ollama_cloud = false        # nuvem do Ollama local (modelos cloud, busca web); false = offline. Mude com `fastwisper ollama online/offline`
+
+[performance]
+vram = "automatico"         # automatico | desempenho | sob_demanda | jogo (perfis de VRAM, M7)
+                            # automatico: modo jogo enquanto houver jogo aberto; fora dele, sob_demanda
+unload_after_secs = 300     # sob_demanda: descarrega após 5 min ocioso; 0 = logo depois do ditado
+game_llm = "local"          # jogo: "local" = carrega no press e descarrega logo após o ditado; "off" = só regras; "remote" = provider remoto já consentido
+
+[inject]
+paste_apps = ["*"]          # "*" = cola em qualquer app; ou uma lista de classes/executáveis
+copy_only_apps = []         # nunca colar nestes (só copia + aviso), ex.: ["org.keepassxc.KeePassXC"]
+# terminal_apps = ["kitty", "ghostty", ...]  # padrão: terminais comuns + tag "terminal" do Omarchy (Ctrl+Shift+V)
+harness_apps = []           # classes/executáveis desktop confirmados; regras de terminal, colagem Ctrl+V
+clipboard_history = false   # false: clipboard marcado como sensível (o histórico do Omarchy não guarda)
+notify = true               # avisar quando o texto for só copiado
+restore_clipboard = false   # ainda não suportado; nunca por delay fixo
+send_now = false            # opt-in: sufixo num terminal/harness; após paste aceito, mesma janela, um Enter sem modificadores
+# Nunca em copy-only, foco trocado, fallback de clipboard ou paste-last/copy-last; frase sai antes do LLM.
+# O intervalo de 200 ms não comprova consumo pelo app; ditado só com a frase não entrega nada.
+# Até 16 frases/idioma, 64 caracteres/frase; só letras, números e espaços; [] desliga aquele idioma.
+send_now_phrases = { pt = ["enviar agora"], en = ["send now"] }  # frases por idioma (valem as de asr.languages); caixa e acentos não importam
+
+[overlay]
+enabled = true              # pílula de estado na tela (shell do Omarchy); false = só a barra
+position = "bottom"         # bottom (embaixo, no centro)
+
+[hub]
+theme = "auto"              # auto = tema do Omarchy (escuro sem tema); dark; light; omarchy:<nome> = paleta instalada, só no hub
+
+[experimental]
+notes = false               # opt-in: notas de texto locais pelo composer; não guarda áudio nem ditado comum
+
+[privacy]
+store_text = false
+store_audio = false
+
+[dictionary]
+words = ["Omarchy", "Hyprland", "FastWisper", "Rust", "Tauri"]
+replace = { "fast whisper" = "FastWisper" }
+
+[[snippets]]
+trigger = "meu email"
+expansion = "voce@exemplo.com"

@@ -1,0 +1,34 @@
+[package]
+name = "fastwisper"
+description = "CLI do FastWisper: controla o daemon pelo socket local."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[features]
+# Vulkan é o backend padrão no Omarchy; a CI compila só CPU (--no-default-features).
+default = ["vulkan"]
+vulkan = ["fw-core/vulkan"]
+cuda = ["fw-core/cuda"]
+
+[dependencies]
+fw-core = { workspace = true, features = ["whisper", "pipewire"] }
+anyhow.workspace = true
+clap.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+ureq.workspace = true
+# `poll` na saída: `--follow` parado percebe que quem lia saiu.
+rustix = { workspace = true, features = ["event"] }
+toml_edit.workspace = true
+tempfile.workspace = true
+
+[lints]
+workspace = true
+
+[dev-dependencies]
+tokio.workspace = true

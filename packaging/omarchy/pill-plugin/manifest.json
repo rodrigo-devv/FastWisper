@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "fastwisper.pill",
+  "name": "FastWisper: pílula",
+  "version": "0.1.0",
+  "author": "FastWisper",
+  "description": "Pílula do ditado local FastWisper: aparece só enquanto grava (onda pelo nível do microfone), transcreve ou falha. Não rouba foco nem clique.",
+  "kinds": [
+    "panel"
+  ],
+  "keepLoaded": true,
+  "entryPoints": {
+    "panel": "Pill.qml"
+  }
+}

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=FastWisper
+Comment=Local dictation settings and activity
+Comment[pt_BR]=Configurações e atividade do ditado local
+Exec=@FASTWISPER_CLI@ hub
+Icon=audio-input-microphone
+Terminal=false
+Categories=Utility;Accessibility;
+StartupWMClass=fastwisper-hub

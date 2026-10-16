@@ -1,0 +1,125 @@
+name: Release
+
+# Tag v* → build, tarball, SHA256SUMS and a DRAFT release (the maintainer
+# publishes it by hand). Without a tag (pull_request, or workflow_dispatch with
+# dry_run) it does everything except the release and uploads the tarball as a
+# run artifact. Only the `draft` job can write to the repository.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Only build the artifact, without creating the draft (outside a tag it never creates one)
+        type: boolean
+        default: true
+  pull_request:
+    paths:
+      - .github/workflows/release.yml
+      - scripts/release/**
+      - packaging/**
+      - docs/release/**
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  CARGO_TERM_COLOR: always
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    # Arch, like Omarchy: same libraries and package names as the README.
+    # Vulkan build (the crate default): vulkan-headers + shaderc (glslc)
+    # generate the shaders on the runner, which needs no GPU; the binary also
+    # runs on the CPU.
+    runs-on: ubuntu-latest
+    container: archlinux:base-devel@sha256:061679925e5d5028f2df9395d441ce6c4b9accf0157ff3486c06b6962e014ef1
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Build dependencies (the ones in the README)
+        run: |
+          pacman -Syu --noconfirm --needed git rust clang cmake pkgconf \
+            pipewire alsa-lib vulkan-headers vulkan-icd-loader shaderc \
+            nodejs npm webkit2gtk-4.1 diffutils
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Version
+        id: version
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          source scripts/release/common.sh
+          version=$(release_version)
+          if [[ $GITHUB_REF == refs/tags/* && $GITHUB_REF_NAME != "v$version" ]]; then
+            echo "::error::tag $GITHUB_REF_NAME does not match the Cargo.toml version ($version)"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "name=$(release_name "$version")" >> "$GITHUB_OUTPUT"
+      - name: Build the dictation binaries (Vulkan)
+        # whisper.cpp's vulkan-shaders-gen forks glslc for every variant; with
+        # the container's 16 MB stack limit the commit charge goes past 30 GB,
+        # forks fail ("Failed to fork process"), variants disappear without an
+        # error and the link breaks with `undefined symbol: ..._data`. A 2 MB
+        # soft limit fixes it (0 failures in 3 runs, against 2 in 3). gcc
+        # raises its own limit; rustc uses its own stacks.
+        run: |
+          ulimit -S -s 2048
+          if ! cargo build --release --locked; then
+            grep -h -A12 -e 'cannot compile' -e 'Error executing' \
+              target/release/build/whisper-rs-sys-*/output target/release/build/whisper-rs-sys-*/stderr 2>/dev/null | head -n 120 || true
+            exit 1
+          fi
+      - name: Build the hub
+        working-directory: ui
+        run: |
+          npm ci
+          npm run tauri -- build --no-bundle -- --locked
+      - name: Tarball and SHA256SUMS
+        run: bash scripts/release/package.sh target/release ui/src-tauri/target/release dist
+      - name: Check the tarball (installs into temporary HOME/XDG with --no-activate)
+        run: bash scripts/release/verify.sh dist
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ steps.version.outputs.name }}
+          path: |
+            dist/${{ steps.version.outputs.name }}.tar.gz
+            dist/SHA256SUMS
+            dist/release-notes.md
+          if-no-files-found: error
+          retention-days: 14
+
+  draft:
+    # Only on a v* tag: the tag push, or workflow_dispatch on a tag with dry_run=false.
+    needs: build
+    if: >-
+      startsWith(github.ref, 'refs/tags/v') &&
+      (github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.dry_run == false))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: fastwisper-${{ needs.build.outputs.version }}-x86_64-linux
+          path: dist
+      - name: Draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          cd dist
+          sha256sum --strict -c SHA256SUMS
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --draft --verify-tag \
+            --title "FastWisper $VERSION" --notes-file release-notes.md \
+            "fastwisper-$VERSION-x86_64-linux.tar.gz" SHA256SUMS

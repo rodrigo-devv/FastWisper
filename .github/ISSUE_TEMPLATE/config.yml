@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or idea to discuss
+    url: https://github.com/rodrigo-devv/FastWisper/discussions
+    about: Ask questions and share ideas in GitHub Discussions.
+  - name: Security vulnerability
+    url: https://github.com/rodrigo-devv/FastWisper/security/advisories/new
+    about: Report vulnerabilities privately. Please do not open a public issue.

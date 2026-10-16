@@ -1,0 +1,5 @@
+# A saída da CLI passa por `src/output.rs` (pipe fechado não vira pânico).
+disallowed-methods = [
+    { path = "std::io::stdout", reason = "use crate::out!/outln! (src/output.rs)" },
+    { path = "std::io::stderr", reason = "use crate::eout!/eoutln! (src/output.rs)" },
+]

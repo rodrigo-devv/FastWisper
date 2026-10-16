@@ -1,0 +1,92 @@
+name: CI
+
+# Runs for every pull request (forks included) and for pushes to main.
+# Never use pull_request_target here: fork code must not run with write
+# access or secrets. No secrets are used anywhere in this workflow.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# A new push to the same PR cancels the run that is still in progress.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  CARGO_TERM_COLOR: always
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  rust:
+    # No GPU or audio on the runner: CPU build (no Vulkan) and the fast tests.
+    # Tests that need a real model, GPU or PipeWire are #[ignore].
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      # libpipewire builds the capture code; lua5.4 runs the fake Hyprland used by the hotkey tests.
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libpipewire-0.3-dev socat jq iproute2 lua5.4
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        with:
+          toolchain: stable
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace --all-targets --locked --no-default-features -- -D warnings
+      - run: cargo test --workspace --locked --no-default-features
+      - run: bash scripts/network/tests/contract.sh
+      # Release tarball with fake binaries: file list, SHA256SUMS and --no-activate install.
+      - run: bash scripts/release/tests/contract.sh
+
+  hub:
+    # Separate workspace: WebKit is only needed by this job.
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - uses: dtolnay/rust-toolchain@686976e191b89faba57d3206551f0f330d8cb249 # stable
+        with:
+          toolchain: stable
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@6323deb102c322ba6fcbdcafc7e3dddab59af2b6 # v2.9.2
+        with:
+          workspaces: ui/src-tauri -> target
+      - run: sudo apt-get update && sudo apt-get install -y --no-install-recommends libwebkit2gtk-4.1-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+      - run: npm ci
+      - run: npm run check
+      - run: npm run build
+      - run: cargo fmt --manifest-path src-tauri/Cargo.toml -- --check
+      - run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --locked -- -D warnings
+      - run: cargo test --manifest-path src-tauri/Cargo.toml --locked
+      - run: bash ../packaging/omarchy/tests/hub.sh
+
+  hygiene:
+    # Generic leak scan (secrets, /home/ paths, e-mail addresses, large
+    # binaries, image metadata), its own contract and the rules that keep this
+    # CI safe for outside PRs. The scan needs only bash, GNU grep, findutils,
+    # coreutils, awk, sed and git, all on the runner.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - run: bash scripts/public/leak-scan.sh .
+      - run: bash scripts/public/tests/leak-scan.sh
+      - run: bash scripts/public/tests/github-rules.sh .github

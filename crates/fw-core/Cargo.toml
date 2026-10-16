@@ -1,0 +1,47 @@
+[package]
+name = "fw-core"
+description = "Núcleo do FastWisper: config, sessão, IPC e daemon."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[features]
+default = []
+# Motor whisper.cpp (compila C++). Sem ele, o core segue testável com fakes.
+whisper = ["dep:whisper-rs"]
+vulkan = ["whisper", "whisper-rs/vulkan"]
+cuda = ["whisper", "whisper-rs/cuda"]
+# Captura do microfone (libpipewire). Sem ela, a seleção de dispositivo segue testável.
+pipewire = ["dep:pipewire"]
+
+[dependencies]
+hound.workspace = true
+landlock.workspace = true
+# v0_3_49: `requested()` do buffer (sons de início/fim no ritmo do grafo).
+pipewire = { workspace = true, optional = true, features = ["v0_3_49"] }
+reqwest.workspace = true
+rubato.workspace = true
+rusqlite.workspace = true
+rustix.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+tempfile.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+toml.workspace = true
+toml_edit.workspace = true
+tracing.workspace = true
+# Doctor e estado da nuvem: só o Ollama local, síncrono (CLI e hub).
+ureq.workspace = true
+whisper-rs = { workspace = true, optional = true }
+
+[dev-dependencies]
+# requested() do buffer, também usado pelo microfone virtual dos testes.
+pipewire = { workspace = true, features = ["v0_3_49"] }
+tracing-subscriber.workspace = true
+
+[lints]
+workspace = true
