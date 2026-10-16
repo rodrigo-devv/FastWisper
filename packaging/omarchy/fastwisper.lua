@@ -159,8 +159,10 @@ local function stop_watching(which)
   end
 end
 
+-- Descrições fixas em inglês: o Rust só reconhece o prefixo "FastWisper:".
+-- shortcut: não seguem ui.language; para traduzir, levar o idioma no hotkeys.conf (parser estrito acima).
 -- Segurando o atalho de ditar: soltar a tecla ou um modificador encerra; Esc cancela.
-o.bind(hotkeys.dictate.bind, "FastWisper: ditar (segurar)", function()
+o.bind(hotkeys.dictate.bind, "FastWisper: dictate (hold)", function()
   if state.hold then
     return -- já gravando (repetição); o daemon também é idempotente
   end
@@ -177,7 +179,7 @@ o.bind(hotkeys.dictate.bind, "FastWisper: ditar (segurar)", function()
 end)
 
 -- Mãos livres: o atalho liga e desliga; Esc cancela enquanto grava.
-o.bind(hotkeys.hands_free.bind, "FastWisper: ditar sem segurar", function()
+o.bind(hotkeys.hands_free.bind, "FastWisper: hands-free", function()
   if state.handsfree then
     stop_watching("handsfree")
   else
@@ -191,6 +193,6 @@ o.bind(hotkeys.hands_free.bind, "FastWisper: ditar sem segurar", function()
   ctl("toggle")
 end)
 
-o.bind(hotkeys.paste_last.bind, "FastWisper: colar último ditado", function()
+o.bind(hotkeys.paste_last.bind, "FastWisper: paste again", function()
   ctl("paste-last")
 end)

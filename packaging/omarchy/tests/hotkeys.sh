@@ -51,9 +51,9 @@ export PATH="$scratch/mock:$PATH"
 # Binds atuais: os do FastWisper (não contam) e um de outro programa em SUPER+D.
 cat > "$FAKE_BINDS" <<'JSON'
 [
-  {"modmask":8,"key":"SPACE","keycode":0,"submap":"","mouse":false,"description":"FastWisper: ditar (segurar)","dispatcher":"__lua","arg":"1"},
-  {"modmask":9,"key":"SPACE","keycode":0,"submap":"","mouse":false,"description":"FastWisper: ditar sem segurar","dispatcher":"__lua","arg":"2"},
-  {"modmask":72,"key":"V","keycode":0,"submap":"","mouse":false,"description":"FastWisper: colar último ditado","dispatcher":"__lua","arg":"3"},
+  {"modmask":8,"key":"SPACE","keycode":0,"submap":"","mouse":false,"description":"FastWisper: dictate (hold)","dispatcher":"__lua","arg":"1"},
+  {"modmask":9,"key":"SPACE","keycode":0,"submap":"","mouse":false,"description":"FastWisper: hands-free","dispatcher":"__lua","arg":"2"},
+  {"modmask":72,"key":"V","keycode":0,"submap":"","mouse":false,"description":"FastWisper: paste again","dispatcher":"__lua","arg":"3"},
   {"modmask":64,"key":"D","keycode":0,"submap":"","mouse":false,"description":"Abrir o lançador","dispatcher":"__lua","arg":"4"}
 ]
 JSON
@@ -72,9 +72,9 @@ expect() { # expect <saída esperada> passo...
   [[ "$got" == "$want" ]] || { printf 'Hyprland falso: %s\nesperado:\n%s\nobtido:\n%s\n' "$*" "$want" "$got" >&2; exit 1; }
 }
 ctl="exec '$HOME/.local/bin/fastwisper' ctl"
-defaults="bind ALT + SHIFT + SPACE = FastWisper: ditar sem segurar
-bind ALT + SPACE = FastWisper: ditar (segurar)
-bind SUPER + ALT + V = FastWisper: colar último ditado"
+defaults="bind ALT + SHIFT + SPACE = FastWisper: hands-free
+bind ALT + SPACE = FastWisper: dictate (hold)
+bind SUPER + ALT + V = FastWisper: paste again"
 
 # 1. Sem arquivo: os padrões de sempre; soltar Space, Alt esquerdo ou direito encerra.
 [[ ! -e "$hotkeys" ]]
@@ -116,9 +116,9 @@ grep -qF 'Hyprland reloaded' "$scratch/out"
 grep -qxF 'dictate SUPER+D 40 133 134' "$hotkeys"
 [[ $(head -n1 "$hotkeys") == '# FastWisper: atalhos gerados da config ([hotkey]).' ]]
 [[ $(find "$XDG_DATA_HOME/fastwisper" -maxdepth 1 -name 'hotkeys*' | wc -l) == 1 ]]
-expect "bind ALT + SHIFT + SPACE = FastWisper: ditar sem segurar
-bind SUPER + ALT + V = FastWisper: colar último ditado
-bind SUPER + D = FastWisper: ditar (segurar)" binds
+expect "bind ALT + SHIFT + SPACE = FastWisper: hands-free
+bind SUPER + ALT + V = FastWisper: paste again
+bind SUPER + D = FastWisper: dictate (hold)" binds
 # Soltura: a tecla (D), Super esquerdo ou direito; Alt (fora do atalho) não.
 expect "$ctl press
 $ctl release" press 'SUPER + D' key 40 0
@@ -209,9 +209,9 @@ done
 expect_defaults
 # Arquivo válido escrito à mão continua valendo (o formato é o contrato).
 printf 'version 1\ndictate SUPER+D 40 133 134\nhands_free ALT+SHIFT+SPACE\npaste_last SUPER+ALT+V\n' > "$hotkeys"
-expect "bind ALT + SHIFT + SPACE = FastWisper: ditar sem segurar
-bind SUPER + ALT + V = FastWisper: colar último ditado
-bind SUPER + D = FastWisper: ditar (segurar)" binds
+expect "bind ALT + SHIFT + SPACE = FastWisper: hands-free
+bind SUPER + ALT + V = FastWisper: paste again
+bind SUPER + D = FastWisper: dictate (hold)" binds
 
 # 8. Desinstalar remove o arquivo gerado (só o nosso).
 fw hotkeys apply --no-reload > /dev/null

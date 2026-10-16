@@ -71,7 +71,7 @@ loaded=$(EXPECTED="$installed" BINDINGS="$bindings" "$lua" -e '
 printf 'version 1\ndictate CTRL+ALT+F9 75 37 105 64 108\nhands_free ALT+SHIFT+SPACE\npaste_last SUPER+ALT+V\n' \
   > "$XDG_DATA_HOME/fastwisper/hotkeys.conf"
 binds=$("$lua" "$harness" "$installed" binds)
-grep -qxF 'bind CTRL + ALT + F9 = FastWisper: ditar (segurar)' <<< "$binds"
+grep -qxF 'bind CTRL + ALT + F9 = FastWisper: dictate (hold)' <<< "$binds"
 
 # O comando montado pelo Lua é uma palavra de shell válida: chega à CLI.
 command=$("$lua" "$harness" "$installed" press 'CTRL + ALT + F9')
