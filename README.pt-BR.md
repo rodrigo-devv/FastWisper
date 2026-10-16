@@ -254,7 +254,8 @@ Para compilar do código: Rust estável 1.89+ (`rustup`), toolchain C/C++, `clan
 ```bash
 sudo pacman -S --needed base-devel rustup clang cmake pkgconf git \
   pipewire alsa-lib vulkan-headers vulkan-icd-loader shaderc \
-  wl-clipboard libnotify jq nodejs npm webkit2gtk-4.1
+  wl-clipboard libnotify jq webkit2gtk-4.1
+command -v npm >/dev/null || sudo pacman -S --needed npm  # só puxa o nodejs se não houver Node.js (ex.: nodejs-lts-*)
 rustup default stable
 ```
 

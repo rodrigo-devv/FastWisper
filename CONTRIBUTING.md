@@ -18,8 +18,9 @@ Requirements are listed in the [README](README.md#requirements). On Omarchy/Arch
 ```bash
 sudo pacman -S --needed base-devel rustup clang cmake pkgconf git \
   pipewire alsa-lib vulkan-headers vulkan-icd-loader shaderc \
-  wl-clipboard libnotify jq nodejs npm webkit2gtk-4.1 \
+  wl-clipboard libnotify jq webkit2gtk-4.1 \
   lua python socat iproute2
+command -v npm >/dev/null || sudo pacman -S --needed npm  # pulls nodejs only if no Node.js (e.g. nodejs-lts-*) is installed
 rustup default stable
 
 cargo build                          # GPU build (Vulkan, the default)

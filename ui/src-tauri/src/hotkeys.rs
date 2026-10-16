@@ -154,7 +154,7 @@ mod tests {
         crate::test_support::write_executable(
             &script,
             &format!(
-                "#!/bin/bash\necho \"$*\" >> '{log}'\ncase \"$*\" in\n  'binds -j') echo '[{{\"modmask\":64,\"key\":\"SPACE\",\"description\":\"Omarchy menu\"}},{{\"modmask\":8,\"key\":\"SPACE\",\"description\":\"FastWisper: ditar (segurar)\"}}]' ;;\n  reload) echo ok ;;\n  *) exit 3 ;;\nesac\n",
+                "#!/bin/bash\necho \"$*\" >> '{log}'\ncase \"$*\" in\n  'binds -j') echo '[{{\"modmask\":64,\"key\":\"SPACE\",\"description\":\"Omarchy menu\"}},{{\"modmask\":8,\"key\":\"SPACE\",\"description\":\"FastWisper: dictate (hold)\"}}]' ;;\n  reload) echo ok ;;\n  *) exit 3 ;;\nesac\n",
                 log = dir.join("calls").display()
             ),
         );

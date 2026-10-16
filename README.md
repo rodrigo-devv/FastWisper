@@ -252,7 +252,8 @@ To build from source you also need Rust stable 1.89+ (`rustup`), a C/C++ toolcha
 ```bash
 sudo pacman -S --needed base-devel rustup clang cmake pkgconf git \
   pipewire alsa-lib vulkan-headers vulkan-icd-loader shaderc \
-  wl-clipboard libnotify jq nodejs npm webkit2gtk-4.1
+  wl-clipboard libnotify jq webkit2gtk-4.1
+command -v npm >/dev/null || sudo pacman -S --needed npm  # pulls nodejs only if no Node.js (e.g. nodejs-lts-*) is installed
 rustup default stable
 ```
 

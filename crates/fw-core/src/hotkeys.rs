@@ -1151,14 +1151,14 @@ mod tests {
             .collect();
         assert_eq!(&lua[start..end], body);
         assert!(lua.contains(&format!("local KEY_ESC = {ESC_KEYCODE}\n")));
-        assert!(lua.contains(&format!("{BIND_DESCRIPTION_PREFIX} ditar (segurar)")));
+        assert!(lua.contains(&format!("{BIND_DESCRIPTION_PREFIX} dictate (hold)")));
         assert!(lua.contains(&format!("{FILE_MAX_BYTES}")));
     }
 
     fn binds() -> Vec<Bind> {
         serde_json::from_str(
             r#"[
-              {"modmask":8,"key":"SPACE","keycode":0,"submap":"","mouse":false,"description":"FastWisper: ditar (segurar)","dispatcher":"__lua","arg":"1"},
+              {"modmask":8,"key":"SPACE","keycode":0,"submap":"","mouse":false,"description":"FastWisper: dictate (hold)","dispatcher":"__lua","arg":"1"},
               {"modmask":64,"key":"SPACE","keycode":0,"submap":"","mouse":false,"description":"Omarchy menu","dispatcher":"__lua","arg":"2"},
               {"modmask":64,"key":"d","keycode":0,"submap":"","mouse":false,"description":"","dispatcher":"exec","arg":"foot"},
               {"modmask":72,"key":"Prior","keycode":0,"submap":"","mouse":false,"description":"Página","dispatcher":"__lua","arg":"3"},
