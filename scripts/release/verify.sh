@@ -59,10 +59,12 @@ for binary in fastwisper fastwisperd fastwisper-hub; do
   cmp -s "$pkg/bin/$binary" "$scratch/home/.local/bin/$binary" || fail "$binary não instalado do tarball"
 done
 for file in data/applications/fastwisper.desktop data/doc/fastwisper/README.md data/fastwisper/hyprland.lua \
-  config/systemd/user/fastwisperd.service config/omarchy/plugins/fastwisper.dictation/FastWisper.qml \
-  config/omarchy/plugins/fastwisper.pill/Pill.qml; do
+  config/systemd/user/fastwisperd.service config/omarchy/plugins/fastwisper.pill/Pill.qml; do
   [[ -f $scratch/home/$file ]] || fail "não instalado: $file"
 done
+# O widget da barra é um plugin separado do Omarchy: fora do tarball e da instalação.
+! grep -q '/packaging/omarchy/shell-plugin/' "$scratch/actual" || fail 'tarball com o widget legado da barra'
+[[ ! -e $scratch/home/config/omarchy/plugins/fastwisper.dictation ]] || fail 'instalou o widget legado da barra'
 [[ $(isolated "$scratch/home/.local/bin/fastwisper" --version) == "fastwisper $version" ]] || fail 'fastwisper instalado não responde'
 isolated bash "$pkg/packaging/omarchy/uninstall.sh" > "$scratch/uninstall.log" 2>&1 || { cat "$scratch/uninstall.log" >&2; fail 'uninstall.sh falhou'; }
 for binary in fastwisper fastwisperd fastwisper-hub; do

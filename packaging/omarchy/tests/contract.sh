@@ -29,15 +29,18 @@ version() {
     chmod +x "$FASTWISPER_BUILD_DIR/$binary"
   done
   printf '\n-- version %s\n' "$1" >> "$repo/packaging/omarchy/fastwisper.lua"
-  printf '\n// version %s\n' "$1" >> "$repo/packaging/omarchy/shell-plugin/FastWisper.qml"
+  printf '\n// version %s\n' "$1" >> "$repo/packaging/omarchy/pill-plugin/Pill.qml"
   printf '\n# version %s\n' "$1" >> "$repo/packaging/systemd/fastwisperd.service"
 }
 run() { local script=$1; shift; [[ "$script" != install ]] || set -- --no-activate "$@"; bash "$repo/packaging/omarchy/$script.sh" "$@" > /dev/null; }
 version A
 run install
 [[ $("$HOME/.local/bin/fastwisper") == A ]]
+# O widget da barra é um plugin separado: o instalador nunca escreve nele.
+[[ ! -e "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.dictation" ]]
+refute grep -rqF 'fastwisper.dictation' "$XDG_STATE_HOME/fastwisper/packaging"
 cp "$XDG_CONFIG_HOME/systemd/user/fastwisperd.service" "$scratch/unit-A"
-cp "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.dictation/FastWisper.qml" "$scratch/qml-A"
+cp "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.pill/Pill.qml" "$scratch/qml-A"
 cp "$XDG_DATA_HOME/fastwisper/hyprland.lua" "$scratch/lua-A"
 version B
 run install
@@ -45,7 +48,7 @@ run install
 run rollback
 [[ $("$HOME/.local/bin/fastwisper") == A ]]
 cmp "$scratch/unit-A" "$XDG_CONFIG_HOME/systemd/user/fastwisperd.service"
-cmp "$scratch/qml-A" "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.dictation/FastWisper.qml"
+cmp "$scratch/qml-A" "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.pill/Pill.qml"
 cmp "$scratch/lua-A" "$XDG_DATA_HOME/fastwisper/hyprland.lua"
 run install
 run install
@@ -53,7 +56,7 @@ run install
 # Arbitrary changes after install must survive upgrade, rollback and uninstall.
 echo '-- new foreign bind F9' >> "$XDG_CONFIG_HOME/hypr/bindings.lua"
 echo external > "$HOME/.local/bin/fastwisper"
-echo external >> "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.dictation/FastWisper.qml"
+echo external >> "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.pill/Pill.qml"
 echo external > "$XDG_CONFIG_HOME/systemd/user/fastwisperd.service"
 echo '{"selected":"other.backend"}' > "$XDG_CONFIG_HOME/omarchy/shell.json"
 version C
@@ -66,10 +69,32 @@ run uninstall
 [[ $(cat "$XDG_CONFIG_HOME/systemd/user/fastwisperd.service") == external ]]
 grep -qE 'new foreign bind' "$XDG_CONFIG_HOME/hypr/bindings.lua"
 refute grep -qE 'BEGIN fastwisper' "$XDG_CONFIG_HOME/hypr/bindings.lua"
-grep -qE 'external' "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.dictation/FastWisper.qml"
+grep -qE 'external' "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.pill/Pill.qml"
 grep -qE 'other.backend' "$XDG_CONFIG_HOME/omarchy/shell.json"
 [[ $(cat "$XDG_CONFIG_HOME/fastwisper/config.toml") == 'external config' ]]
 [[ $(cat "$XDG_DATA_HOME/fastwisper/models/keep") == 'external model' ]]
+# Upgrade de uma geração antiga que instalava o widget legado
+# fastwisper.dictation: os arquivos dele ficam no disco e no ledger, e
+# rollback/uninstall continuam desfazendo-os.
+legacy=$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.dictation
+cp "$repo/packaging/omarchy/install.sh" "$scratch/install-new"
+printf '{"id":"fastwisper.dictation"}\n' > "$scratch/legacy-manifest.json"
+printf '// widget legado\n' > "$scratch/legacy.qml"
+sed -i '/^# Pílula de gravação/i managed_file "$LEGACY_SRC/legacy-manifest.json" "$config_root/omarchy/plugins/fastwisper.dictation/manifest.json" 0644\nmanaged_file "$LEGACY_SRC/legacy.qml" "$config_root/omarchy/plugins/fastwisper.dictation/FastWisper.qml" 0644' \
+  "$repo/packaging/omarchy/install.sh"
+grep -q LEGACY_SRC "$repo/packaging/omarchy/install.sh"
+LEGACY_SRC=$scratch run install
+cp "$scratch/install-new" "$repo/packaging/omarchy/install.sh"
+cmp "$scratch/legacy.qml" "$legacy/FastWisper.qml"
+version legacy-upgrade
+run install
+cmp "$scratch/legacy.qml" "$legacy/FastWisper.qml"
+cmp "$scratch/legacy-manifest.json" "$legacy/manifest.json"
+run rollback
+cmp "$scratch/legacy.qml" "$legacy/FastWisper.qml"
+run install
+run uninstall
+[[ ! -e "$legacy/manifest.json" && ! -e "$legacy/FastWisper.qml" ]]
 # Preflight failure and subsequent retry.
 rm "$FASTWISPER_BUILD_DIR/fastwisperd"
 if run install; then echo 'missing candidate accepted' >&2; exit 1; fi

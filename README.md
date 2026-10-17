@@ -40,7 +40,7 @@ fastwisper doctor
 
 Then hold **Alt+Space**, speak, and let go. That's it.
 
-The installer builds the current code (`cargo build --release`, Vulkan by default), configures the microphone, downloads the speech model with a pinned checksum, turns the local Ollama cloud features off, enables the user service and wires up the shortcuts, the bar icon, the recording pill and the configuration hub. It never needs `sudo` for FastWisper itself; it only asks for your password if a system-wide Ollama service has to be switched offline. Its messages are in English, or in Brazilian Portuguese when your locale is Portuguese (`LC_ALL`, `LC_MESSAGES` or `LANG` starting with `pt`, e.g. `LANG=pt_BR.UTF-8 packaging/omarchy/install.sh`). To update, pull and run the installer again.
+The installer builds the current code (`cargo build --release`, Vulkan by default), configures the microphone, downloads the speech model with a pinned checksum, turns the local Ollama cloud features off, enables the user service and wires up the shortcuts, the recording pill and the configuration hub. The bar icon is a separate plugin ([Omarchy bar plugin](#omarchy-bar-plugin)). It never needs `sudo` for FastWisper itself; it only asks for your password if a system-wide Ollama service has to be switched offline. Its messages are in English, or in Brazilian Portuguese when your locale is Portuguese (`LC_ALL`, `LC_MESSAGES` or `LANG` starting with `pt`, e.g. `LANG=pt_BR.UTF-8 packaging/omarchy/install.sh`). To update, pull and run the installer again.
 
 <details>
 <summary><b>Install from the release tarball (no compiling)</b></summary>
@@ -81,10 +81,30 @@ Without `FASTWISPER_HUB_BUILD_DIR`, an external build installs without the hub.
 - `--offline`: downloads no models, and the hub build only uses the npm/cargo cache.
 - `--no-activate`: only installs files (no setup, downloads or activation).
 - `--no-hub`: skips the hub (it does not remove an already installed hub).
+- `--bar-plugin`: also adds the [Omarchy bar plugin](#omarchy-bar-plugin) from git (ignored with `--offline`).
 
-They can be combined, and the tarball's `./install.sh` accepts the same options. If Node.js/npm or WebKit is missing, or the hub build fails, the installer warns and dictation keeps working without the hub. It migrates a recognized legacy integration automatically and restarts the shell when the active QML changed. `fastwisper models pull` without arguments downloads the configured speech model; the daemon and `fastwisper setup` never download models.
+They can be combined, and the tarball's `./install.sh` accepts the same options. If Node.js/npm or WebKit is missing, or the hub build fails, the installer warns and dictation keeps working without the hub. It migrates a recognized legacy integration automatically and restarts the shell when the pill's QML changed. `fastwisper models pull` without arguments downloads the configured speech model; the daemon and `fastwisper setup` never download models.
 
 </details>
+
+## Omarchy bar plugin
+
+The bar icon is a separate Omarchy shell plugin, maintained in its own repository: [s3xz/omarchy-fastwisper](https://github.com/s3xz/omarchy-fastwisper). The installer does not download it by default; add it with:
+
+```bash
+omarchy plugin add https://github.com/s3xz/omarchy-fastwisper.git --enable
+```
+
+or run `packaging/omarchy/install.sh --bar-plugin`, which does the same at the end of the installation (skipped with `--offline`, since it clones from git; a failure only warns). The plugin finds `fastwisper` on your `PATH` or in `~/.local/bin` and shows "FastWisper app not installed" when the CLI is missing. The recording pill is not affected: it is still installed by `install.sh`.
+
+**Migrating from `fastwisper.dictation`.** Version 0.1.0 installed the bar widget as the `fastwisper.dictation` plugin. Newer installers leave its files in place (rollback and uninstall still handle them) but no longer update it, and remind you to migrate. Add the new plugin and remove the old one:
+
+```bash
+omarchy plugin add https://github.com/s3xz/omarchy-fastwisper.git --enable
+omarchy plugin remove fastwisper.dictation   # or: omarchy plugin disable fastwisper.dictation
+```
+
+With `--bar-plugin`, the installer adds the new plugin and disables `fastwisper.dictation` if it is on the bar, so you don't end up with two widgets.
 
 ## Usage
 
@@ -124,7 +144,7 @@ End a dictation in a terminal or AI assistant with **"send now"** (or "enviar ag
 
 ### The hub
 
-`fastwisper hub` opens the local configuration hub, also available from the app launcher and from a right click on the bar icon.
+`fastwisper hub` opens the local configuration hub, also available from the app launcher and from a right click on the bar icon ([bar plugin](#omarchy-bar-plugin)).
 
 <table>
   <tr>
@@ -313,7 +333,7 @@ For a system-wide Ollama service, switching it offline needs `sudo` in a termina
 <details>
 <summary><b>Does FastWisper work outside Omarchy?</b></summary>
 
-It targets Omarchy with Hyprland 0.56+ and its Lua config; the bar icon and the pill are Omarchy shell plugins. Other Hyprland setups may work but are not tested, and the installer exits with an error when the Omarchy shell is missing.
+It targets Omarchy with Hyprland 0.56+ and its Lua config; the pill and the optional bar icon are Omarchy shell plugins. Other Hyprland setups may work but are not tested, and the installer exits with an error when the Omarchy shell is missing.
 
 </details>
 
@@ -353,8 +373,8 @@ Run these from the source checkout or from the extracted release folder. To remo
 
 ```bash
 systemctl --user disable --now fastwisperd.service
-omarchy plugin disable fastwisper.dictation
 omarchy plugin disable fastwisper.pill
+omarchy plugin remove io.github.s3xz.fastwisper   # if you added the bar plugin
 packaging/omarchy/uninstall.sh
 systemctl --user daemon-reload
 hyprctl reload
@@ -369,7 +389,7 @@ systemctl --user restart fastwisperd.service
 hyprctl reload
 ```
 
-`uninstall.sh` also removes the hub. Rollback and uninstall only restore files that still match what was installed, and keep your config, models and external edits. The rollback works on disk: if the QML changed, run `omarchy-restart-shell` to refresh the bar and the pill. Your config (`~/.config/fastwisper/`), models (`~/.local/share/fastwisper/models/`) and state such as usage history and notes (`~/.local/state/fastwisper/`) stay in place; delete them by hand for a clean slate.
+`uninstall.sh` also removes the hub. Rollback and uninstall only restore files that still match what was installed, and keep your config, models and external edits. The rollback works on disk: if the pill's QML changed, run `omarchy-restart-shell` to refresh it. A `fastwisper.dictation` bar widget left by version 0.1.0 is removed by `uninstall.sh` when unchanged; otherwise remove it with `omarchy plugin remove fastwisper.dictation`. Your config (`~/.config/fastwisper/`), models (`~/.local/share/fastwisper/models/`) and state such as usage history and notes (`~/.local/state/fastwisper/`) stay in place; delete them by hand for a clean slate.
 
 </details>
 

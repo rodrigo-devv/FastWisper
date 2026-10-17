@@ -30,7 +30,7 @@ uses_default_runtime() {
   return 1
 }
 activate_install() {
-  local cli="$bin_dir/fastwisper" device errors new_errors qml_after qml_active pill_after pill_active binds_validated=0
+  local cli="$bin_dir/fastwisper" device errors new_errors pill_after pill_active binds_validated=0
   device=$(config_string audio device)
   if [[ -z "${device//[[:space:]]/}" ]]; then
     "$cli" setup 9>&- || { warn setup_failed; return 1; }
@@ -97,36 +97,20 @@ activate_install() {
       else warn hypr_unavailable; fi
     else warn hypr_unavailable; fi
   else warn hypr_missing; fi
-  if ! command -v jq >/dev/null; then
-    warn jq_missing
-  elif ! jq -e 'any((.bar.layout // {} | .[] | .[]); .id == "fastwisper.dictation")' \
-    "$config_root/omarchy/shell.json" >/dev/null 2>&1; then
-    optional omarchy-shell shell rescanPlugins
-    if command -v omarchy >/dev/null; then
-      omarchy plugin enable fastwisper.dictation --section right --after omarchy.tray 9>&- \
-        || optional omarchy plugin enable fastwisper.dictation --section right
-    else warn tool_missing_skipped omarchy; fi
-  fi
   # Pílula: plugin `panel` sem lugar na barra; habilitado = listado em `.plugins`.
   # Quem não quer a pílula usa `[overlay] enabled = false`.
-  if command -v jq >/dev/null && [[ -f "$pill_dir/Pill.qml" ]] \
+  if ! command -v jq >/dev/null; then
+    warn jq_missing
+  elif [[ -f "$pill_dir/Pill.qml" ]] \
     && ! jq -e 'any(.plugins[]?; (.id? // .) == "fastwisper.pill")' \
       "$config_root/omarchy/shell.json" >/dev/null 2>&1; then
     optional omarchy-shell shell rescanPlugins
     if command -v omarchy >/dev/null; then optional omarchy plugin enable fastwisper.pill
     else warn tool_missing_skipped omarchy; fi
   fi
+  # O shell não relê QML/JS de plugin carregado: pílula mudada reinicia.
+  # O hash cobre o QML e a lógica importada por ele.
   local restart=0 rescan=0
-  qml_after=''
-  if [[ -f "$plugin_dir/FastWisper.qml" ]]; then
-    qml_after=$(sha256sum "$plugin_dir/FastWisper.qml" | cut -d' ' -f1)
-  fi
-  qml_active=''
-  if [[ -f "$state_root/active-qml" && ! -L "$state_root/active-qml" ]]; then qml_active=$(cat "$state_root/active-qml"); fi
-  if [[ -n "$qml_active" && "$qml_active" != "$qml_after" ]]; then restart=1
-  elif [[ -z "$qml_active" ]]; then rescan=1; fi
-  # O shell não relê QML/JS de plugin carregado: pílula mudada também
-  # reinicia. O hash cobre o QML e a lógica importada por ele.
   pill_after=''
   if [[ -f "$pill_dir/Pill.qml" ]]; then
     pill_after=$(cat "$pill_dir/Pill.qml" "$pill_dir/PillLogic.js" 2>/dev/null | sha256sum | cut -d' ' -f1)
@@ -148,12 +132,6 @@ activate_install() {
       return 1
     fi
   fi
-  if [[ ! -L "$state_root/active-qml" ]] && [[ ! -f "$state_root/active-qml" || "$qml_active" != "$qml_after" ]]; then
-    local active_tmp
-    active_tmp=$(mktemp "$state_root/.active-qml.XXXXXX")
-    printf '%s\n' "$qml_after" > "$active_tmp"
-    mv -f "$active_tmp" "$state_root/active-qml"
-  fi
   if [[ -n "$pill_after" && "$pill_active" != "$pill_after" && ! -L "$state_root/active-pill-qml" ]]; then
     local pill_tmp
     pill_tmp=$(mktemp "$state_root/.active-pill-qml.XXXXXX")
@@ -161,4 +139,29 @@ activate_install() {
     mv -f "$pill_tmp" "$state_root/active-pill-qml"
   fi
   (( binds_validated )) || warn binds_not_validated
+  bar_plugin_step
+}
+# Widget da barra: plugin separado do Omarchy (rede: só com --bar-plugin e
+# sem --offline). Nunca falha a instalação; arquivos legados ficam intactos.
+bar_plugin_step() {
+  local url=https://github.com/s3xz/omarchy-fastwisper.git
+  local legacy=$config_root/omarchy/plugins/fastwisper.dictation
+  if [[ -f "$config_root/omarchy/plugins/io.github.s3xz.fastwisper/manifest.json" ]]; then
+    return 0
+  elif (( ! ${bar_plugin:-0} )); then
+    if [[ -f "$legacy/manifest.json" ]]; then warn bar_plugin_migrate "$url"
+    else say bar_plugin_hint "$url"; fi
+  elif (( offline )); then
+    warn bar_plugin_offline "$url"
+  elif ! command -v omarchy >/dev/null; then
+    warn tool_missing_skipped omarchy
+  elif omarchy plugin add "$url" --enable --yes 9>&-; then
+    # O widget legado no layout ficaria ao lado do novo.
+    if command -v jq >/dev/null && jq -e 'any((.bar.layout // {} | .[] | .[]); .id == "fastwisper.dictation")' \
+      "$config_root/omarchy/shell.json" >/dev/null 2>&1; then
+      optional omarchy plugin disable fastwisper.dictation
+    fi
+  else
+    warn optional_failed "omarchy plugin add $url --enable --yes"
+  fi
 }

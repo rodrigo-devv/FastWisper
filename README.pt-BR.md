@@ -40,7 +40,7 @@ fastwisper doctor
 
 Depois segure **Alt+Space**, fale e solte. Pronto.
 
-O instalador compila o código atual (`cargo build --release`, com Vulkan por padrão), configura o microfone, baixa o modelo de transcrição com checksum fixado, desliga a nuvem do Ollama local, habilita o serviço do usuário e integra os atalhos, o ícone da barra, a pílula de gravação e o hub de configuração. Ele nunca precisa de `sudo` para o FastWisper em si; só pede a senha se um serviço Ollama do sistema precisar ficar offline. As mensagens dele saem em inglês, ou em português quando o seu locale é português (`LC_ALL`, `LC_MESSAGES` ou `LANG` começando com `pt`, por exemplo `LANG=pt_BR.UTF-8 packaging/omarchy/install.sh`). Para atualizar, atualize o checkout e rode o instalador de novo.
+O instalador compila o código atual (`cargo build --release`, com Vulkan por padrão), configura o microfone, baixa o modelo de transcrição com checksum fixado, desliga a nuvem do Ollama local, habilita o serviço do usuário e integra os atalhos, a pílula de gravação e o hub de configuração. O ícone da barra é um plugin separado ([Plugin da barra do Omarchy](#plugin-da-barra-do-omarchy)). Ele nunca precisa de `sudo` para o FastWisper em si; só pede a senha se um serviço Ollama do sistema precisar ficar offline. As mensagens dele saem em inglês, ou em português quando o seu locale é português (`LC_ALL`, `LC_MESSAGES` ou `LANG` começando com `pt`, por exemplo `LANG=pt_BR.UTF-8 packaging/omarchy/install.sh`). Para atualizar, atualize o checkout e rode o instalador de novo.
 
 <details>
 <summary><b>Instalar pelo tarball da release (sem compilar)</b></summary>
@@ -81,10 +81,30 @@ Sem `FASTWISPER_HUB_BUILD_DIR`, um build externo instala sem o hub.
 - `--offline`: não baixa modelos, e o build do hub usa só o cache do npm/cargo.
 - `--no-activate`: só instala arquivos (sem setup, downloads nem ativação).
 - `--no-hub`: pula o hub (não remove um hub já instalado).
+- `--bar-plugin`: também adiciona o [plugin da barra do Omarchy](#plugin-da-barra-do-omarchy) pelo git (ignorado com `--offline`).
 
-Elas podem ser combinadas, e o `./install.sh` do tarball aceita as mesmas. Se faltar Node.js/npm ou WebKit, ou se o build do hub falhar, o instalador avisa e o ditado continua funcionando sem o hub. Ele migra sozinho uma integração legada reconhecida e reinicia o shell quando o QML ativo mudou. `fastwisper models pull` sem argumentos baixa o modelo de transcrição configurado; o daemon e o `fastwisper setup` nunca baixam modelos.
+Elas podem ser combinadas, e o `./install.sh` do tarball aceita as mesmas. Se faltar Node.js/npm ou WebKit, ou se o build do hub falhar, o instalador avisa e o ditado continua funcionando sem o hub. Ele migra sozinho uma integração legada reconhecida e reinicia o shell quando o QML da pílula mudou. `fastwisper models pull` sem argumentos baixa o modelo de transcrição configurado; o daemon e o `fastwisper setup` nunca baixam modelos.
 
 </details>
+
+## Plugin da barra do Omarchy
+
+O ícone da barra é um plugin separado do shell do Omarchy, mantido no próprio repositório: [s3xz/omarchy-fastwisper](https://github.com/s3xz/omarchy-fastwisper). O instalador não o baixa por padrão; adicione com:
+
+```bash
+omarchy plugin add https://github.com/s3xz/omarchy-fastwisper.git --enable
+```
+
+ou rode `packaging/omarchy/install.sh --bar-plugin`, que faz o mesmo no fim da instalação (pulado com `--offline`, porque clona do git; uma falha só gera aviso). O plugin procura o `fastwisper` no `PATH` ou em `~/.local/bin` e mostra "FastWisper app not installed" quando a CLI não existe. A pílula de gravação não muda: continua instalada pelo `install.sh`.
+
+**Migrando do `fastwisper.dictation`.** A versão 0.1.0 instalava o widget da barra como o plugin `fastwisper.dictation`. Os instaladores novos deixam os arquivos dele no lugar (rollback e uninstall continuam cuidando deles), mas não o atualizam mais e lembram de migrar. Adicione o plugin novo e remova o antigo:
+
+```bash
+omarchy plugin add https://github.com/s3xz/omarchy-fastwisper.git --enable
+omarchy plugin remove fastwisper.dictation   # ou: omarchy plugin disable fastwisper.dictation
+```
+
+Com `--bar-plugin`, o instalador adiciona o plugin novo e desabilita o `fastwisper.dictation` se ele estiver na barra, para não ficarem dois widgets.
 
 ## Uso
 
@@ -124,7 +144,7 @@ Termine um ditado num terminal ou assistente de IA com **"enviar agora"** (ou "s
 
 ### O hub
 
-`fastwisper hub` abre o hub de configuração local, também disponível no lançador de apps e no clique direito do ícone da barra.
+`fastwisper hub` abre o hub de configuração local, também disponível no lançador de apps e no clique direito do ícone da barra ([plugin da barra](#plugin-da-barra-do-omarchy)).
 
 <table>
   <tr>
@@ -315,7 +335,7 @@ Para um serviço Ollama do sistema, deixá-lo offline exige `sudo` num terminal,
 <details>
 <summary><b>O FastWisper funciona fora do Omarchy?</b></summary>
 
-O alvo é o Omarchy com Hyprland 0.56+ e config Lua; o ícone da barra e a pílula são plugins do shell do Omarchy. Outras instalações do Hyprland podem funcionar, mas não são testadas, e o instalador sai com erro quando falta o shell do Omarchy.
+O alvo é o Omarchy com Hyprland 0.56+ e config Lua; a pílula e o ícone opcional da barra são plugins do shell do Omarchy. Outras instalações do Hyprland podem funcionar, mas não são testadas, e o instalador sai com erro quando falta o shell do Omarchy.
 
 </details>
 
@@ -355,8 +375,8 @@ Rode a partir do checkout do código ou da pasta extraída da release. Para remo
 
 ```bash
 systemctl --user disable --now fastwisperd.service
-omarchy plugin disable fastwisper.dictation
 omarchy plugin disable fastwisper.pill
+omarchy plugin remove io.github.s3xz.fastwisper   # se você adicionou o plugin da barra
 packaging/omarchy/uninstall.sh
 systemctl --user daemon-reload
 hyprctl reload
@@ -371,7 +391,7 @@ systemctl --user restart fastwisperd.service
 hyprctl reload
 ```
 
-O `uninstall.sh` também remove o hub. Rollback e uninstall só restauram arquivos que ainda batem com o que foi instalado, e mantêm a sua config, os modelos e edições externas. O rollback trabalha no disco: se o QML mudou, rode `omarchy-restart-shell` para atualizar a barra e a pílula. A config (`~/.config/fastwisper/`), os modelos (`~/.local/share/fastwisper/models/`) e o estado, como histórico de uso e notas (`~/.local/state/fastwisper/`), continuam no lugar; apague à mão se quiser começar do zero.
+O `uninstall.sh` também remove o hub. Rollback e uninstall só restauram arquivos que ainda batem com o que foi instalado, e mantêm a sua config, os modelos e edições externas. O rollback trabalha no disco: se o QML da pílula mudou, rode `omarchy-restart-shell` para atualizá-la. Um widget `fastwisper.dictation` deixado pela versão 0.1.0 é removido pelo `uninstall.sh` quando não foi alterado; senão, remova com `omarchy plugin remove fastwisper.dictation`. A config (`~/.config/fastwisper/`), os modelos (`~/.local/share/fastwisper/models/`) e o estado, como histórico de uso e notas (`~/.local/state/fastwisper/`), continuam no lugar; apague à mão se quiser começar do zero.
 
 </details>
 

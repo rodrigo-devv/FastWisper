@@ -32,8 +32,6 @@ shell_json="$XDG_CONFIG_HOME/omarchy/shell.json"
 mkdir -p "$XDG_CONFIG_HOME/omarchy"
 [[ -f "$shell_json" ]] || echo '{}' > "$shell_json"
 case "$*" in
-  'plugin enable fastwisper.dictation --section right --after omarchy.tray')
-    filter='.bar.layout.right = [{"id":"omarchy.tray"},{"id":"fastwisper.dictation"}]' ;;
   'plugin enable fastwisper.pill') filter='.plugins = ((.plugins // []) + [{"id":"fastwisper.pill"}])' ;;
   *) exit 99 ;;
 esac
@@ -75,6 +73,9 @@ grep -qxF 'omarchy plugin enable fastwisper.pill' "$CALL_LOG"
 grep -qxF 'omarchy-shell shell rescanPlugins' "$CALL_LOG"
 [[ $(restarts) == 0 ]]
 jq -e 'any(.plugins[]; .id == "fastwisper.pill")' "$XDG_CONFIG_HOME/omarchy/shell.json" > /dev/null
+# O widget da barra é um plugin separado: nada de fastwisper.dictation.
+[[ ! -e "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.dictation" ]]
+refute grep -q 'dictation\|plugin add' "$CALL_LOG"
 cp "$pill/Pill.qml" "$scratch/pill-A"
 
 # Repetição sem mudanças: mesmos bytes/mtimes/ledger, sem omarchy nem restart.
