@@ -6,8 +6,8 @@
 
 **Private voice dictation for Linux. Hold a key, speak, let go: your words are typed into the app you were using, and nothing leaves your machine.**
 
-[![CI](https://github.com/rodrigo-devv/FastWisper/actions/workflows/ci.yml/badge.svg)](https://github.com/rodrigo-devv/FastWisper/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/rodrigo-devv/FastWisper?include_prereleases&sort=semver)](https://github.com/rodrigo-devv/FastWisper/releases)
+[![CI](https://github.com/s3xz/FastWisper/actions/workflows/ci.yml/badge.svg)](https://github.com/s3xz/FastWisper/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/s3xz/FastWisper?include_prereleases&sort=semver)](https://github.com/s3xz/FastWisper/releases)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Linux%20%C2%B7%20Hyprland%20%C2%B7%20Omarchy-8b5cf6)](#requirements)
 
@@ -33,7 +33,7 @@ FastWisper is local voice dictation in English and Portuguese for [Omarchy](http
 On Omarchy, with the [build dependencies](#requirements) installed (one `pacman` line) and `~/.local/bin` on your `PATH`, run this from a terminal **inside your Hyprland session**:
 
 ```bash
-git clone https://github.com/rodrigo-devv/FastWisper.git && cd FastWisper
+git clone https://github.com/s3xz/FastWisper.git && cd FastWisper
 packaging/omarchy/install.sh
 fastwisper doctor
 ```
@@ -45,7 +45,7 @@ The installer builds the current code (`cargo build --release`, Vulkan by defaul
 <details>
 <summary><b>Install from the release tarball (no compiling)</b></summary>
 
-The release ships prebuilt binaries (`fastwisper`, `fastwisperd` and `fastwisper-hub`). Download the tarball and `SHA256SUMS` from the [releases page](https://github.com/rodrigo-devv/FastWisper/releases), check them and run the bundled installer:
+The release ships prebuilt binaries (`fastwisper`, `fastwisperd` and `fastwisper-hub`). Download the tarball and `SHA256SUMS` from the [releases page](https://github.com/s3xz/FastWisper/releases), check them and run the bundled installer:
 
 ```bash
 sha256sum -c SHA256SUMS

@@ -91,8 +91,8 @@ pub async fn open_guide() -> Result<(), String> {
 
 /// URLs exatas da tela Sobre; a webview não pode abrir outro destino.
 const ABOUT_URLS: [&str; 2] = [
-    "https://github.com/rodrigo-devv/FastWisper",
-    "https://github.com/rodrigo-devv",
+    "https://github.com/s3xz/FastWisper",
+    "https://github.com/s3xz",
 ];
 
 fn about_link_command(url: &str) -> Result<Process, String> {
@@ -132,12 +132,12 @@ mod tests {
         }
         for url in [
             "https://example.com",
-            "https://github.com/rodrigo-devv/",
-            "https://github.com/rodrigo-devv/FastWisper/issues",
-            "https://github.com/rodrigo-devv?tab=repositories",
-            "https://github.com/rodrigo-devv#profile",
-            "https://github.com/rodrigo-devv.evil.test",
-            "https://github.com/rodrigo-devv;touch /tmp/unwanted",
+            "https://github.com/s3xz/",
+            "https://github.com/s3xz/FastWisper/issues",
+            "https://github.com/s3xz?tab=repositories",
+            "https://github.com/s3xz#profile",
+            "https://github.com/s3xz.evil.test",
+            "https://github.com/s3xz;touch /tmp/unwanted",
             "file:///etc/passwd",
             "javascript:alert(1)",
             "--help",

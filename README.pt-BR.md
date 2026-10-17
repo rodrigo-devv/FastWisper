@@ -6,8 +6,8 @@
 
 **Ditado por voz privado para Linux. Segure uma tecla, fale e solte: o texto aparece no app que você estava usando, e nada sai da sua máquina.**
 
-[![CI](https://github.com/rodrigo-devv/FastWisper/actions/workflows/ci.yml/badge.svg)](https://github.com/rodrigo-devv/FastWisper/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/rodrigo-devv/FastWisper?include_prereleases&sort=semver)](https://github.com/rodrigo-devv/FastWisper/releases)
+[![CI](https://github.com/s3xz/FastWisper/actions/workflows/ci.yml/badge.svg)](https://github.com/s3xz/FastWisper/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/s3xz/FastWisper?include_prereleases&sort=semver)](https://github.com/s3xz/FastWisper/releases)
 [![Licença: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Plataforma](https://img.shields.io/badge/platform-Linux%20%C2%B7%20Hyprland%20%C2%B7%20Omarchy-8b5cf6)](#requisitos)
 
@@ -33,7 +33,7 @@ O FastWisper é um ditado por voz local em português e inglês para o [Omarchy]
 No Omarchy, com as [dependências de build](#requisitos) instaladas (uma linha de `pacman`) e `~/.local/bin` no `PATH`, rode num terminal **dentro da sua sessão Hyprland**:
 
 ```bash
-git clone https://github.com/rodrigo-devv/FastWisper.git && cd FastWisper
+git clone https://github.com/s3xz/FastWisper.git && cd FastWisper
 packaging/omarchy/install.sh
 fastwisper doctor
 ```
@@ -45,7 +45,7 @@ O instalador compila o código atual (`cargo build --release`, com Vulkan por pa
 <details>
 <summary><b>Instalar pelo tarball da release (sem compilar)</b></summary>
 
-A release traz binários prontos (`fastwisper`, `fastwisperd` e `fastwisper-hub`). Baixe o tarball e o `SHA256SUMS` da [página de releases](https://github.com/rodrigo-devv/FastWisper/releases), confira e rode o instalador incluído:
+A release traz binários prontos (`fastwisper`, `fastwisperd` e `fastwisper-hub`). Baixe o tarball e o `SHA256SUMS` da [página de releases](https://github.com/s3xz/FastWisper/releases), confira e rode o instalador incluído:
 
 ```bash
 sha256sum -c SHA256SUMS

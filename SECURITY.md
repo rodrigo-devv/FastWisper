@@ -7,7 +7,7 @@ Only the latest release receives security fixes.
 ## Reporting a vulnerability
 
 Please **do not open a public issue**. Report it privately through GitHub Security Advisories:
-[Report a vulnerability](https://github.com/rodrigo-devv/FastWisper/security/advisories/new) (repository **Security** tab → **Report a vulnerability**).
+[Report a vulnerability](https://github.com/s3xz/FastWisper/security/advisories/new) (repository **Security** tab → **Report a vulnerability**).
 
 Include the affected version (`fastwisper --version`), what an attacker can do, and the steps to reproduce. Do not include real dictated text or other personal data; synthetic examples are enough.
 
