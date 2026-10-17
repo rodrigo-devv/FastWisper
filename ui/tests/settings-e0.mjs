@@ -84,9 +84,9 @@ for(const theme of ['dark','light']) {
  await page.getByText('v0.1.0',{exact:true}).waitFor();
  await page.screenshot({path:`${out}/${theme}-sobre.png`});
  await page.getByRole('button',{name:'Abrir repositório',exact:true}).click();
- assert.deepEqual(await page.evaluate(()=>window.__calls.filter(x=>x[0]==='open_about_link').at(-1)),['open_about_link',{url:'https://github.com/rodrigo-devv/FastWisper'}]);
+ assert.deepEqual(await page.evaluate(()=>window.__calls.filter(x=>x[0]==='open_about_link').at(-1)),['open_about_link',{url:'https://github.com/s3xz/FastWisper'}]);
  await page.getByRole('button',{name:'Abrir perfil',exact:true}).click();
- assert.deepEqual(await page.evaluate(()=>window.__calls.filter(x=>x[0]==='open_about_link').at(-1)),['open_about_link',{url:'https://github.com/rodrigo-devv'}]);
+ assert.deepEqual(await page.evaluate(()=>window.__calls.filter(x=>x[0]==='open_about_link').at(-1)),['open_about_link',{url:'https://github.com/s3xz'}]);
  await menu.getByRole('button',{name:'Ajuda',exact:true}).click();
  await page.getByText(/fastwisper doctor/).waitFor();
  await page.screenshot({path:`${out}/${theme}-ajuda.png`});

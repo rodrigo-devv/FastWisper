@@ -15,8 +15,8 @@
 <p class="description">{t("Ditado por voz 100% local para Omarchy/Hyprland. Transcreve e formata na própria máquina, sem nuvem por padrão.")}</p>
 <SettingsGroup title="FastWisper">
   <AdjustmentRow title={t("Versão")} description={t("Versão do aplicativo, definida no Cargo.")}><span class="version">v{version}</span></AdjustmentRow>
-  <AdjustmentRow title={t("Repositório")} description="github.com/rodrigo-devv/FastWisper"><WideButton onclick={() => open('https://github.com/rodrigo-devv/FastWisper')}>{t("Abrir repositório")}</WideButton></AdjustmentRow>
-  <AdjustmentRow title={t("Desenvolvedor")} description="github.com/rodrigo-devv"><WideButton onclick={() => open('https://github.com/rodrigo-devv')}>{t("Abrir perfil")}</WideButton></AdjustmentRow>
+  <AdjustmentRow title={t("Repositório")} description="github.com/s3xz/FastWisper"><WideButton onclick={() => open('https://github.com/s3xz/FastWisper')}>{t("Abrir repositório")}</WideButton></AdjustmentRow>
+  <AdjustmentRow title={t("Desenvolvedor")} description="github.com/s3xz"><WideButton onclick={() => open('https://github.com/s3xz')}>{t("Abrir perfil")}</WideButton></AdjustmentRow>
 </SettingsGroup>
 <p class="browser-note">{t("Os links abrem no navegador do sistema.")}</p>
 {#if error}<p class="field-error" role="alert">{t(error)}</p>{/if}
