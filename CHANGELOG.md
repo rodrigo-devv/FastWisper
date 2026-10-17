@@ -91,5 +91,5 @@ First public release: local push-to-talk dictation for Omarchy/Hyprland.
   (`fastwisper config list | head -1` exits cleanly), and `--follow` streams
   stop when their reader goes away.
 
-[Unreleased]: https://github.com/rodrigo-devv/FastWisper/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/rodrigo-devv/FastWisper/releases/tag/v0.1.0
+[Unreleased]: https://github.com/s3xz/FastWisper/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/s3xz/FastWisper/releases/tag/v0.1.0
