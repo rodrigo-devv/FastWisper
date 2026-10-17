@@ -165,8 +165,8 @@ scenario() {
   (cd / && iso "$name" "$@" bash "$scratch/copy-$name/omarchy/uninstall.sh" > "$out.uninstall.out" 2> "$out.uninstall.err")
   [[ ! -e $home/.local/bin/fastwisper ]] || fail "$name: uninstall deixou o binário"
 }
-usage_en='Usage: install.sh [--offline] [--no-activate] [--adopt-existing] [--no-hub]'
-usage_pt='Uso: install.sh [--offline] [--no-activate] [--adopt-existing] [--no-hub]'
+usage_en='Usage: install.sh [--offline] [--no-activate] [--adopt-existing] [--no-hub] [--bar-plugin]'
+usage_pt='Uso: install.sh [--offline] [--no-activate] [--adopt-existing] [--no-hub] [--bar-plugin]'
 check_en() {
   local out=$scratch/out-$1 home=$scratch/home-$1
   expect "$out.help.err" "$usage_en"

@@ -37,4 +37,4 @@ Entrada e saída animadas (escala e opacidade, 150 ms). Fundo e barras usam o te
 
 ## Instalação
 
-`install.sh` copia manifest, QML e `PillLogic.js` pelo ledger (rollback/uninstall removem), habilita com `omarchy plugin enable fastwisper.pill` se `.plugins` do `shell.json` ainda não a lista e só chama `omarchy-restart-shell` quando o QML/JS da pílula (ou o QML da barra) mudou. O opt-out é a config, não a remoção do plugin: uma reinstalação volta a habilitá-lo. Teste: `packaging/omarchy/tests/pill.sh`.
+`install.sh` copia manifest, QML e `PillLogic.js` pelo ledger (rollback/uninstall removem), habilita com `omarchy plugin enable fastwisper.pill` se `.plugins` do `shell.json` ainda não a lista e só chama `omarchy-restart-shell` quando o QML/JS da pílula mudou (o widget da barra é um plugin separado, fora do `install.sh`). O opt-out é a config, não a remoção do plugin: uma reinstalação volta a habilitá-lo. Teste: `packaging/omarchy/tests/pill.sh`.

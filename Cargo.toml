@@ -9,7 +9,7 @@ edition = "2024"
 # File::try_lock (single-instance do daemon) estabilizou no 1.89.
 rust-version = "1.89"
 license = "MIT"
-repository = "https://github.com/rodrigo-devv/FastWisper"
+repository = "https://github.com/s3xz/FastWisper"
 
 [workspace.dependencies]
 fw-core = { path = "crates/fw-core" }

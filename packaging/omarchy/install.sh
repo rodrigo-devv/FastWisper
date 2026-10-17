@@ -42,12 +42,14 @@ adopt_existing=0
 offline=0
 activate=1
 hub=1
+bar_plugin=0
 for option in "$@"; do
   case "$option" in
     --adopt-existing) adopt_existing=1 ;;
     --offline) offline=1 ;;
     --no-activate) activate=0 ;;
     --no-hub) hub=0 ;;
+    --bar-plugin) bar_plugin=1 ;;
     *) say_err install_usage; exit 2 ;;
   esac
 done
@@ -101,16 +103,10 @@ if [[ ! -f "$state_root/current" ]]; then
   fi
   adopt_existing=$legacy
 fi
-plugin_dir=$config_root/omarchy/plugins/fastwisper.dictation
+# O widget da barra é um plugin separado (passo opcional no fim da ativação).
+# Arquivos de fastwisper.dictation de gerações antigas ficam no disco e no
+# ledger: rollback/uninstall continuam desfazendo-os.
 pill_dir=$config_root/omarchy/plugins/fastwisper.pill
-qml_before=''
-if [[ -f "$plugin_dir/FastWisper.qml" ]]; then
-  qml_before=$(sha256sum "$plugin_dir/FastWisper.qml" | cut -d' ' -f1)
-fi
-# Migra o baseline anterior ao ledger de ativação antes de copiar um upgrade.
-if [[ -n "$qml_before" && ! -e "$state_root/active-qml" && ! -f "$state_root/current" ]]; then
-  printf '%s\n' "$qml_before" > "$state_root/active-qml"
-fi
 # Atalhos da config ([hotkey]) que o bindings.lua do usuário também liga: o
 # Hyprland dispara os dois binds. Só avisa; o arquivo do usuário fica intacto
 # (o bloco do FastWisper e comentários não contam).
@@ -222,9 +218,6 @@ if [[ -f "$bindings" ]] && ! grep -qF 'BEGIN fastwisper' "$bindings"; then
   chmod --reference="$bindings" "$tmp"
   mv -f -- "$tmp" "$bindings"
 fi
-managed_file "$repo/packaging/omarchy/shell-plugin/manifest.json" "$plugin_dir/manifest.json" 0644
-render "$repo/packaging/omarchy/shell-plugin/FastWisper.qml" '"@FASTWISPER_CLI@"' "$(quoted_string "$bin_dir/fastwisper")" > "$generation/qml"
-managed_file "$generation/qml" "$plugin_dir/FastWisper.qml" 0644
 # Pílula de gravação (fase 2); o opt-out é `[overlay] enabled = false`.
 managed_file "$repo/packaging/omarchy/pill-plugin/manifest.json" "$pill_dir/manifest.json" 0644
 render "$repo/packaging/omarchy/pill-plugin/Pill.qml" '"@FASTWISPER_CLI@"' "$(quoted_string "$bin_dir/fastwisper")" > "$generation/pill-qml"

@@ -60,13 +60,17 @@ MOCK
 cat > "$scratch/mock/omarchy" <<'MOCK'
 #!/bin/bash
 printf 'omarchy %s\n' "$*" >> "$CALL_LOG"
-if [[ "$*" == *'--after omarchy.tray' && ${TRAY_FAIL:-0} == 1 ]]; then exit 1; fi
+[[ "$*" != 'plugin add '* || ${ADD_FAIL:-0} != 1 ]] || exit 1
 shell_json="$XDG_CONFIG_HOME/omarchy/shell.json"
 mkdir -p "$XDG_CONFIG_HOME/omarchy"
 [[ -f "$shell_json" ]] || echo '{}' > "$shell_json"
 case "$*" in
-  'plugin enable fastwisper.dictation --section right --after omarchy.tray'|'plugin enable fastwisper.dictation --section right')
-    filter='.bar.layout.right = [{"id":"omarchy.tray"},{"id":"fastwisper.dictation"}] | .plugins = ((.plugins // []) + ["fastwisper.dictation"])' ;;
+  'plugin add https://github.com/s3xz/omarchy-fastwisper.git --enable --yes')
+    mkdir -p "$XDG_CONFIG_HOME/omarchy/plugins/io.github.s3xz.fastwisper"
+    echo '{"id":"io.github.s3xz.fastwisper"}' > "$XDG_CONFIG_HOME/omarchy/plugins/io.github.s3xz.fastwisper/manifest.json"
+    filter='.bar.layout.right = ((.bar.layout.right // []) + [{"id":"io.github.s3xz.fastwisper"}])' ;;
+  'plugin disable fastwisper.dictation')
+    filter='.bar.layout |= with_entries(.value |= map(select(.id != "fastwisper.dictation")))' ;;
   'plugin enable fastwisper.pill') filter='.plugins = ((.plugins // []) + [{"id":"fastwisper.pill"}])' ;;
   *) exit 99 ;;
 esac
@@ -129,19 +133,19 @@ refute grep -q 'BEGIN fastwisper' "$XDG_CONFIG_HOME/hypr/bindings.lua"
 export HYPR_NEW_ERRORS=''
 auto
 [[ $(grep -c 'BEGIN fastwisper' "$XDG_CONFIG_HOME/hypr/bindings.lua") == 1 ]]
-# Upgrade somente binário não exige restart shell; mudança QML exige uma vez.
+# Upgrade somente binário não exige restart shell; mudança do QML da pílula exige uma vez.
 echo '# nova versão' >> "$FASTWISPER_BUILD_DIR/fastwisper"
 : > "$CALL_LOG"
 auto
 refute grep -q 'omarchy-restart-shell' "$CALL_LOG"
-echo '// upgrade automático' >> "$repo/packaging/omarchy/shell-plugin/FastWisper.qml"
+echo '// upgrade automático' >> "$repo/packaging/omarchy/pill-plugin/Pill.qml"
 : > "$CALL_LOG"
 auto
 [[ $(grep -c 'omarchy-restart-shell' "$CALL_LOG") == 1 ]]
 : > "$CALL_LOG"
 run rollback
 [[ ! -s "$CALL_LOG" ]]
-refute grep -q 'upgrade automático' "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.dictation/FastWisper.qml"
+refute grep -q 'upgrade automático' "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.pill/Pill.qml"
 # Offline mantém setup e ativação, mas nenhum download.
 rm "$XDG_DATA_HOME/fastwisper/models/ggml-small-q5_1.bin"
 printf '[audio]\ndevice = ""\n' > "$XDG_CONFIG_HOME/fastwisper/config.toml"
@@ -150,11 +154,56 @@ auto --offline
 grep -qxF 'fastwisper setup' "$CALL_LOG"
 refute grep -q 'models pull' "$CALL_LOG"
 [[ ! -e "$XDG_DATA_HOME/fastwisper/models/ggml-small-q5_1.bin" ]]
-# Plugin listado mas sem widget na barra deve ser habilitado.
-printf '{"plugins":["fastwisper.dictation"],"bar":{"layout":{"right":[]}}}\n' > "$XDG_CONFIG_HOME/omarchy/shell.json"
+# Pílula fora de `.plugins` volta a ser habilitada.
+printf '{"plugins":[],"bar":{"layout":{"right":[]}}}\n' > "$XDG_CONFIG_HOME/omarchy/shell.json"
 : > "$CALL_LOG"
 auto
-grep -q '^omarchy plugin enable ' "$CALL_LOG"
+grep -qxF 'omarchy plugin enable fastwisper.pill' "$CALL_LOG"
+# Plugin da barra (repositório separado). Padrão: só a dica, sem rede.
+bar_url=https://github.com/s3xz/omarchy-fastwisper.git
+bar_dir=$XDG_CONFIG_HOME/omarchy/plugins/io.github.s3xz.fastwisper
+legacy_dir=$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.dictation
+bar() { rm -f "$CALL_LOG.reload"; : > "$CALL_LOG"; bash "$repo/packaging/omarchy/install.sh" "$@" > "$scratch/bar-out" 2> "$scratch/bar-err"; }
+bar
+grep -qF "omarchy plugin add $bar_url --enable" "$scratch/bar-out"
+refute grep -q 'plugin add' "$CALL_LOG"
+refute grep -q 'fastwisper.dictation' "$scratch/bar-out" "$scratch/bar-err"
+# Legado instalado: a dica explica a migração e nada é desabilitado.
+mkdir -p "$legacy_dir"
+echo '{"id":"fastwisper.dictation"}' > "$legacy_dir/manifest.json"
+printf '{"plugins":[{"id":"fastwisper.pill"}],"bar":{"layout":{"right":[{"id":"fastwisper.dictation"}]}}}\n' > "$XDG_CONFIG_HOME/omarchy/shell.json"
+bar
+grep -qF 'omarchy plugin remove fastwisper.dictation' "$scratch/bar-err"
+grep -qF "omarchy plugin add $bar_url --enable" "$scratch/bar-err"
+refute grep -q '^omarchy plugin' "$CALL_LOG"
+# --offline --bar-plugin: é rede, só avisa.
+bar --offline --bar-plugin
+refute grep -q 'plugin add' "$CALL_LOG"
+grep -q 'offline mode: bar plugin download skipped' "$scratch/bar-err"
+# add falho não falha a instalação nem mexe no legado.
+ADD_FAIL=1 bar --bar-plugin
+grep -qxF "omarchy plugin add $bar_url --enable --yes" "$CALL_LOG"
+refute grep -q 'plugin disable' "$CALL_LOG"
+[[ ! -e "$bar_dir" ]]
+# --bar-plugin adiciona e desabilita o legado que está no layout; arquivos legados ficam.
+bar --bar-plugin
+grep -qxF "omarchy plugin add $bar_url --enable --yes" "$CALL_LOG"
+grep -qxF 'omarchy plugin disable fastwisper.dictation' "$CALL_LOG"
+[[ $(grep -n 'plugin add' "$CALL_LOG" | cut -d: -f1) -lt $(grep -n 'plugin disable' "$CALL_LOG" | cut -d: -f1) ]]
+refute jq -e 'any(.bar.layout[][]; .id == "fastwisper.dictation")' "$XDG_CONFIG_HOME/omarchy/shell.json" > /dev/null
+[[ -f "$legacy_dir/manifest.json" ]]
+# Plugin novo já instalado: nada a fazer, nem dica.
+bar --bar-plugin
+refute grep -q 'plugin add\|plugin disable' "$CALL_LOG"
+bar
+refute grep -q 'plugin add\|plugin disable' "$CALL_LOG"
+refute grep -q 'omarchy-fastwisper' "$scratch/bar-out" "$scratch/bar-err"
+# Legado fora do layout: --bar-plugin só adiciona.
+rm -rf "$bar_dir"
+bar --bar-plugin
+grep -qxF "omarchy plugin add $bar_url --enable --yes" "$CALL_LOG"
+refute grep -q 'plugin disable' "$CALL_LOG"
+rm -rf "$bar_dir" "$legacy_dir"
 # Configerrors remove somente o bloco novo e mantém payload e binds externos.
 run uninstall
 export HYPR_NEW_ERRORS='erro sintético'
@@ -170,14 +219,14 @@ if auto; then exit 1; fi
 refute grep -q 'BEGIN fastwisper' "$XDG_CONFIG_HOME/hypr/bindings.lua"
 export HYPR_AUTORELOAD=0 HYPR_NEW_ERRORS=''
 # Edições de modo e QML prevalecem inclusive no upgrade automático.
-chmod 0600 "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.dictation/FastWisper.qml"
-echo '// escolha externa' >> "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.dictation/FastWisper.qml"
+chmod 0600 "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.pill/Pill.qml"
+echo '// escolha externa' >> "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.pill/Pill.qml"
 : > "$CALL_LOG"
 auto
 grep -q 'omarchy-restart-shell' "$CALL_LOG"
 run rollback
-[[ $(stat -c '%a' "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.dictation/FastWisper.qml") == 600 ]]
-grep -q 'escolha externa' "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.dictation/FastWisper.qml"
+[[ $(stat -c '%a' "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.pill/Pill.qml") == 600 ]]
+grep -q 'escolha externa' "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.pill/Pill.qml"
 # Ausência das ferramentas desktop/systemd não impede a cópia.
 mkdir "$scratch/minimal-path"
 for executable in /usr/bin/*; do
@@ -217,21 +266,17 @@ for rc in 1 4; do
   grep -q 'NOT validated' "$scratch/unvalidated"
 done
 export HYPR_RC=0 HYPR_ERRORS=''
-# QML copiado sem ativar ainda exige restart na próxima ativação.
-echo '// novo QML pendente' >> "$repo/packaging/omarchy/shell-plugin/FastWisper.qml"
+# QML da pílula copiado sem ativar ainda exige restart na próxima ativação.
+echo '// novo QML pendente' >> "$repo/packaging/omarchy/pill-plugin/Pill.qml"
 # Remove a edição externa deste cenário anterior para um payload novamente gerenciado.
 run uninstall
-rm -f "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.dictation/FastWisper.qml"
+rm -f "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.pill/Pill.qml"
 auto --offline
-echo '// segundo QML pendente' >> "$repo/packaging/omarchy/shell-plugin/FastWisper.qml"
+echo '// segundo QML pendente' >> "$repo/packaging/omarchy/pill-plugin/Pill.qml"
 auto --no-activate
 : > "$CALL_LOG"
 auto --offline
 grep -q 'omarchy-restart-shell' "$CALL_LOG"
-# Ausência da tray tenta habilitar sem --after.
-printf '{"bar":{"layout":{"right":[]}}}' > "$XDG_CONFIG_HOME/omarchy/shell.json"
-TRAY_FAIL=1 auto --offline
-grep -qxF 'omarchy plugin enable fastwisper.dictation --section right' "$CALL_LOG"
 # Corrida no TERM não aborta se o PID já saiu da lista.
 echo "$manual_test_pid" > "$MANUAL_PID_FILE"
 KILL_RACE=1 auto --offline
@@ -250,13 +295,13 @@ grep -q 'different, missing or unverifiable runtime' "$scratch/runtime-warning"
 refute grep -q '^kill ' "$CALL_LOG"
 # Rescan malsucedido permanece pendente após repetir.
 run uninstall
-rm -f "$XDG_STATE_HOME/fastwisper/packaging/active-qml"
-rm -f "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.dictation/FastWisper.qml"
+rm -f "$XDG_STATE_HOME/fastwisper/packaging/active-pill-qml"
+rm -f "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.pill/Pill.qml"
 printf '#!/bin/bash\nexit 1\n' > "$scratch/mock/omarchy-shell"
 for attempt in 1 2; do
   if auto --offline 2> "$scratch/rescan-warning"; then exit 1; fi
   grep -q 'shell rescan failed' "$scratch/rescan-warning"
-  [[ ! -e "$XDG_STATE_HOME/fastwisper/packaging/active-qml" ]]
+  [[ ! -e "$XDG_STATE_HOME/fastwisper/packaging/active-pill-qml" ]]
 done
 kill "$manual_test_pid"
-echo 'ativação: PASS (ASR, offline, binds indisponíveis/novos/preexistentes, QML pendente, corrida PID e fallback tray)'
+echo 'ativação: PASS (ASR, offline, binds indisponíveis/novos/preexistentes, QML pendente, corrida PID e plugin da barra)'

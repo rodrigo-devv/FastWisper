@@ -19,6 +19,7 @@ while [[ "$ancestor" != / ]]; do
   [[ ! -L "$ancestor" ]] || { say_err symlink_dir_refused "$ancestor"; exit 1; }
   ancestor=$(dirname "$ancestor")
 done
+# active-qml: hash do antigo QML da barra, sem uso; segue recusado como symlink.
 for path in lock current pending active-qml active-pill-qml hub-status; do
   [[ ! -L "$state_root/$path" ]] || { say_err symlink_state_refused "$path"; exit 1; }
 done

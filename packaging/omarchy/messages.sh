@@ -19,7 +19,7 @@ declare -gA fw_msg_en=(
   [preserved_later_choice]='Preserved (later choice): %s'
   [preserved_preexisting]='Preserved (pre-existing file): %s'
   [symlink_refused]='Symlink refused: %s'
-  [install_usage]='Usage: install.sh [--offline] [--no-activate] [--adopt-existing] [--no-hub]'
+  [install_usage]='Usage: install.sh [--offline] [--no-activate] [--adopt-existing] [--no-hub] [--bar-plugin]'
   [cargo_missing]='cargo not found: install Rust (rustup) or set FASTWISPER_BUILD_DIR.'
   [building]='Building (cargo build --release)...'
   [build_failed]='Build failed; nothing was installed.'
@@ -55,10 +55,13 @@ declare -gA fw_msg_en=(
   [hypr_new_errors]='Hyprland reported new errors: %s; undoing the block from this installation.'
   [hypr_unavailable]='Hyprland unavailable; block kept and validation skipped.'
   [hypr_missing]='hyprctl or Lua bindings not found; bind validation skipped.'
-  [jq_missing]='jq not found; bar check/activation skipped.'
+  [jq_missing]='jq not found; shell plugin check/activation skipped.'
   [shell_restart_failed]='shell restart failed; the active QML stays pending.'
   [shell_rescan_failed]='shell rescan failed; the active QML stays pending.'
   [binds_not_validated]='Installation finished with binds NOT validated; check them in the Hyprland session.'
+  [bar_plugin_hint]='Bar widget (optional, separate plugin): omarchy plugin add %s --enable (or install.sh --bar-plugin).'
+  [bar_plugin_migrate]='the bar widget is now a separate plugin and fastwisper.dictation no longer gets updates. Migrate with `omarchy plugin add %s --enable` and then `omarchy plugin remove fastwisper.dictation` (or `omarchy plugin disable fastwisper.dictation`).'
+  [bar_plugin_offline]='offline mode: bar plugin download skipped; add it later with `omarchy plugin add %s --enable`.'
 )
 declare -gA fw_msg_pt=(
   [absolute_path_required]='Caminho absoluto obrigatório: %s'
@@ -73,7 +76,7 @@ declare -gA fw_msg_pt=(
   [preserved_later_choice]='Preservado (escolha posterior): %s'
   [preserved_preexisting]='Preservado (arquivo preexistente): %s'
   [symlink_refused]='Symlink recusado: %s'
-  [install_usage]='Uso: install.sh [--offline] [--no-activate] [--adopt-existing] [--no-hub]'
+  [install_usage]='Uso: install.sh [--offline] [--no-activate] [--adopt-existing] [--no-hub] [--bar-plugin]'
   [cargo_missing]='cargo ausente: instale o Rust (rustup) ou defina FASTWISPER_BUILD_DIR.'
   [building]='Compilando (cargo build --release)...'
   [build_failed]='Compilação falhou; nada foi instalado.'
@@ -109,10 +112,13 @@ declare -gA fw_msg_pt=(
   [hypr_new_errors]='Hyprland reportou erros novos: %s; desfazendo o bloco desta instalação.'
   [hypr_unavailable]='Hyprland indisponível; bloco mantido e validação ignorada.'
   [hypr_missing]='hyprctl/bindings Lua ausente; validação dos binds ignorada.'
-  [jq_missing]='jq ausente; verificação/ativação da barra ignorada.'
+  [jq_missing]='jq ausente; verificação/ativação dos plugins do shell ignorada.'
   [shell_restart_failed]='restart do shell falhou; QML ativo permanece pendente.'
   [shell_rescan_failed]='rescan do shell falhou; QML ativo permanece pendente.'
   [binds_not_validated]='Instalação concluída com binds NÃO validados; confira na sessão Hyprland.'
+  [bar_plugin_hint]='Widget da barra (opcional, plugin separado): omarchy plugin add %s --enable (ou install.sh --bar-plugin).'
+  [bar_plugin_migrate]='o widget da barra agora é um plugin separado e o fastwisper.dictation não recebe mais atualizações. Migre com `omarchy plugin add %s --enable` e depois `omarchy plugin remove fastwisper.dictation` (ou `omarchy plugin disable fastwisper.dictation`).'
+  [bar_plugin_offline]='modo offline: download do plugin da barra ignorado; adicione depois com `omarchy plugin add %s --enable`.'
 )
 # en ou pt, conforme a precedência POSIX das variáveis de locale.
 msg_lang() {

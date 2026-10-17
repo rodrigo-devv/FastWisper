@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`install.sh --bar-plugin`** adds the Omarchy bar plugin from git at the end
+  of the installation and disables a `fastwisper.dictation` widget that is on
+  the bar. Skipped with `--offline`; a failure only warns.
+
+### Changed
+
+- **The bar widget is now a separate Omarchy plugin**,
+  [s3xz/omarchy-fastwisper](https://github.com/s3xz/omarchy-fastwisper)
+  (`omarchy plugin add https://github.com/s3xz/omarchy-fastwisper.git --enable`).
+  The installer no longer installs or enables `fastwisper.dictation`; without
+  `--bar-plugin` it only prints how to add the plugin. Files of an existing
+  `fastwisper.dictation` stay in place and are still undone by rollback and
+  uninstall; migrate by adding the new plugin and running
+  `omarchy plugin remove fastwisper.dictation` (or `disable`). The recording
+  pill is unchanged.
+
 ## [0.1.0] - 2026-10-16
 
 First public release: local push-to-talk dictation for Omarchy/Hyprland.
@@ -91,5 +109,5 @@ First public release: local push-to-talk dictation for Omarchy/Hyprland.
   (`fastwisper config list | head -1` exits cleanly), and `--follow` streams
   stop when their reader goes away.
 
-[Unreleased]: https://github.com/rodrigo-devv/FastWisper/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/rodrigo-devv/FastWisper/releases/tag/v0.1.0
+[Unreleased]: https://github.com/s3xz/FastWisper/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/s3xz/FastWisper/releases/tag/v0.1.0

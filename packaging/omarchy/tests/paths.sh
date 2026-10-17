@@ -80,13 +80,12 @@ command=$("$lua" "$harness" "$installed" press 'CTRL + ALT + F9')
 bash -c "${command#exec }"
 [[ $(cat "$CALL_LOG") == 'fastwisper ctl press' ]]
 
-# QML da barra e da pílula: a string decodificada é o caminho da CLI.
+# QML da pílula: a string decodificada é o caminho da CLI.
 qml_cli() {
   local line
   line=$(grep -m1 'readonly property string cli:' "$1")
   python3 -I -c 'import json, sys; print(json.loads(sys.argv[1].split("cli: ", 1)[1]))' "$line"
 }
-[[ $(qml_cli "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.dictation/FastWisper.qml") == "$HOME/.local/bin/fastwisper" ]]
 [[ $(qml_cli "$XDG_CONFIG_HOME/omarchy/plugins/fastwisper.pill/Pill.qml") == "$HOME/.local/bin/fastwisper" ]]
 
 # Reinstalar não duplica; desinstalar devolve o bindings.lua do usuário.
